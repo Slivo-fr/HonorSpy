@@ -1,0 +1,1 @@
+watch -n 2 cp -rf /mnt/d/Worskspace/InviteWorld/ "/mnt/c/Program\ Files\ \(x86\)/World\ of\ Warcraft/_classic_era_/Interface/AddOns/"
