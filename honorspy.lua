@@ -3,10 +3,30 @@ HonorSpy = LibStub("AceAddon-3.0"):NewAddon("HonorSpy", "AceConsole-3.0", "AceHo
 local L = LibStub("AceLocale-3.0"):GetLocale("HonorSpy", true)
 
 local addonName = GetAddOnMetadata("HonorSpy", "Title");
-local commPrefix = addonName .. "4";
+local commPrefix = "hserafr1";
+
+function HonorSpy:getFullUnitName(unit)
+
+	if (unit == "player") then
+		return UnitName("player") .. "-" .. GetRealmName()
+	end
+
+	local name, realm = UnitFullName(unit)
+
+	if (name == nil) then
+		return nil
+	end
+
+	if (realm == nil) then
+		realm = GetRealmName()
+	end
+
+	return name .. "-" .. realm
+end
+
 
 local paused = false; -- pause all inspections when user opens inspect frame
-local playerName = UnitName("player");
+local playerName = HonorSpy:getFullUnitName("player")
 local callback = nil
 local nameToTest = nil
 local startRemovingFakes = false
@@ -47,14 +67,21 @@ function HonorSpy:OnInitialize()
 	HonorSpyGUI:PrepareGUI()
 	PrintWelcomeMsg();
 	DBHealthCheck()
+
+	C_Timer.NewTimer(60 * 15, function() HonorSpy:broadcastPlayers(false) end)
 end
 
 local inspectedPlayers = {}; -- stores last_checked time of all players met
 local inspectedPlayerName = nil; -- name of currently inspected player
 
 local function StartInspecting(unitID)
-	local name, realm = UnitName(unitID);
-	if (paused or (realm and realm ~= "")) then
+	local name, realm = GetUnitName(unitID, true);
+	name = HonorSpy:getFullUnitName(unitID)
+	if (name == nil or not UnitPlayerControlled(unitID)) then return end
+	if (realm == nil) then _,realm = strsplit('-', name) end
+	--if (name ~= nil) then print("StartInspecting", name, realm) end
+	if (paused or (realm and (realm ~= "Finkle" and realm ~= "Amnennar" and realm ~= "Sulfuron"))) then
+		--print('StartInspecting', "aborted", paused, realm)
 		return
 	end
 	if (name ~= inspectedPlayerName) then -- changed target, clear currently inspected player
@@ -233,6 +260,30 @@ local options = {
 			get = false,
 			set = function(info, playerName) HonorSpy:Report(playerName) end
 		},
+		debug = {
+			type = 'execute',
+			name = "debug",
+			desc = "debug",
+			func = function()
+				DevTools_Dump(HonorSpy.db.factionrealm.fakePlayers)
+			end
+		},
+		purge = {
+			type = 'execute',
+			name = "debug",
+			desc = "debug",
+			func = function()
+				HonorSpy:Purge()
+			end
+		},
+		pool = {
+			type = 'input',
+			name = "poolsize",
+			desc = "set pool boost",
+			usage = "?",
+			get = false,
+			set = function(info, count) HonorSpy.db.factionrealm.poolBoost = tonumber(count) end
+		},
 	}
 }
 LibStub("AceConfig-3.0"):RegisterOptionsTable("HonorSpy", options, {"honorspy", "hs"})
@@ -258,7 +309,8 @@ end
 
 -- REPORT
 function HonorSpy:GetPoolBoostForToday() -- estimates pool boost to the date (as final pool boost should be only achieved at the end of the week)
-	return  math.floor((GetServerTime() - HonorSpy.db.factionrealm.last_reset) / (7*24*60*60) * (HonorSpy.db.factionrealm.poolBoost or 0)+.5)
+	return HonorSpy.db.factionrealm.poolBoost
+	--return  math.floor((GetServerTime() - HonorSpy.db.factionrealm.last_reset) / (7*24*60*60) * (HonorSpy.db.factionrealm.poolBoost or 0)+.5)
 end
 
 function HonorSpy:GetBrackets(pool_size)
@@ -412,7 +464,9 @@ function isFakePlayer(playerName)
 end
 
 function store_player(playerName, player)
-	if (player == nil or playerName == nil or playerName:find("[%d%p%s%c%z]") or isFakePlayer(playerName) or not playerIsValid(player)) then return end
+	if (player == nil or playerName == nil or playerName:find("[%d%s%c%z]") or isFakePlayer(playerName) or not playerIsValid(player)) then
+		return
+	end
 	
 	local player = table.copy(player);
 	local localPlayer = HonorSpy.db.factionrealm.currentStandings[playerName];
@@ -423,7 +477,10 @@ function store_player(playerName, player)
 end
 
 function HonorSpy:OnCommReceive(prefix, message, distribution, sender)
-	if (distribution ~= "GUILD" and UnitRealmRelationship(sender) ~= 1) then
+	local name, realm = strsplit("-", sender)
+	local samePool = (realm == nil or realm == "Finkle" or realm == "Amnennar" and realm == "Sulfuron")
+
+	if (distribution ~= "GUILD" and not samePool) then
 		return -- discard any message from players from different servers (on x-realm BGs)
 	end
 	local ok, playerName, player = self:Deserialize(message);
@@ -456,6 +513,10 @@ end
 -- Broadcast on death
 local last_send_time = 0;
 function HonorSpy:PLAYER_DEAD()
+	HonorSpy:broadcastPlayers(true)
+end
+
+function HonorSpy:broadcastPlayers(skipYell)
 	local filtered_players, count = {}, 0;
 	if (time() - last_send_time < 10*60) then return end;
 	last_send_time = time();
@@ -464,12 +525,12 @@ function HonorSpy:PLAYER_DEAD()
 		filtered_players[playerName] = player;
 		count = count + 1;
 		if (count == 10) then
-			broadcast(self:Serialize("filtered_players", filtered_players), true)
+			broadcast(self:Serialize("filtered_players", filtered_players), skipYell)
 			filtered_players, count = {}, 0;
 		end
 	end
 	if (count > 0) then
-		broadcast(self:Serialize("filtered_players", filtered_players), true)
+		broadcast(self:Serialize("filtered_players", filtered_players), skipYell)
 	end
 end
 
@@ -479,6 +540,12 @@ function FAKE_PLAYERS_FILTER(_s, e, msg, ...)
 		if (not nameToTest) then
 			return true
 		end
+
+		local name, realm = strsplit('-', nameToTest)
+		if (realm == nil) then
+			nameToTest = name .. '-' .. GetRealmName()
+		end
+
 		HonorSpy.db.factionrealm.currentStandings[nameToTest] = nil
 		HonorSpy.db.factionrealm.fakePlayers[nameToTest] = true
 		HonorSpy.db.factionrealm.goodPlayers[nameToTest] = nil
@@ -492,8 +559,14 @@ function FAKE_PLAYERS_FILTER(_s, e, msg, ...)
     	friend = msg:match(string.gsub(ERR_FRIEND_ALREADY_S, "(%%s)", "(.+)"))
     end
     if (friend) then
-    	HonorSpy.db.factionrealm.goodPlayers[friend] = true
-    	HonorSpy.db.factionrealm.fakePlayers[friend] = nil
+		local name, realm = strsplit('-', friend)
+		local fullFriendName = friend
+		if (realm == nil) then
+			fullFriendName = name .. '-' .. GetRealmName()
+		end
+
+    	HonorSpy.db.factionrealm.goodPlayers[fullFriendName] = true
+    	HonorSpy.db.factionrealm.fakePlayers[fullFriendName] = nil
     	if (friend == nameToTest) then
     		HonorSpy:removeTestedFriends()
     		nameToTest = nil
@@ -519,14 +592,21 @@ function HonorSpy:TestNextFakePlayer()
 	if (nameToTest or not startRemovingFakes) then return end
 
 	for playerName, player in pairs(HonorSpy.db.factionrealm.currentStandings) do
-		if (not HonorSpy.db.factionrealm.fakePlayers[playerName] and not HonorSpy.db.factionrealm.goodPlayers[playerName] and playerName ~= UnitName("player")) then
+		if (not HonorSpy.db.factionrealm.fakePlayers[playerName] and not HonorSpy.db.factionrealm.goodPlayers[playerName] and playerName ~= HonorSpy:getFullUnitName("player")) then
+
+			local name, realm = strsplit("-", playerName)
+
+			if (realm == GetRealmName()) then
+				playerName = name
+			end
+
 			nameToTest = playerName
 			break
 		end
 	end
 	if (nameToTest) then
 		C_FriendList.AddFriend(nameToTest, "HonorSpy testing")
-		HS_wait(1, function() HonorSpy:TestNextFakePlayer() end) 
+		HS_wait(1, function() HonorSpy:TestNextFakePlayer() end)
 	end
 end
 
@@ -620,7 +700,7 @@ function DrawMinimapIcon()
 			if (button == "RightButton") then
 				HonorSpy:Report()
 			elseif (button == "MiddleButton") then
-				HonorSpy:Report(UnitIsPlayer("target") and UnitName("target") or nil)
+				HonorSpy:Report(UnitIsPlayer("target") and HonorSpy:getFullUnitName("target") or nil)
 			else 
 				HonorSpy:CheckNeedReset()
 				HonorSpyGUI:Toggle()

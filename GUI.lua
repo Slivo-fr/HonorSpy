@@ -21,7 +21,7 @@ local colors = {
 	["NORMAL"] = "f2ca45"
 }
 
-local playerName = UnitName("player")
+local playerName = HonorSpy:getFullUnitName("player")
 
 function GUI:Show(skipUpdate, sort_column)
 	if (not skipUpdate) then
@@ -69,7 +69,7 @@ function GUI:Show(skipUpdate, sort_column)
 		playerStandings:SetText(format('%s %s, %s: %s\n%s\n', L['Progress of'], playerName, colorize(L['Estimated Honor'], "GREY"), colorize(HonorSpy.db.char.estimated_honor, "ORANGE"), L['You have 0 honor or not enough HKs, min = 15']))
 	end
 
-	reportBtn:SetText(L['Report'] .. ' ' .. (UnitIsPlayer("target") and UnitName("target") or ''))
+	reportBtn:SetText(L['Report'] .. ' ' .. (UnitIsPlayer("target") and HonorSpy:getFullUnitName("target") or ''))
 
 	mainFrame:Show()
 	GUI:UpdateTableView()
@@ -200,7 +200,7 @@ function GUI:PrepareGUI()
 	reportBtn:SetRelativeWidth(0.19)
 	reportBtn.text:SetFontObject("SystemFont_NamePlate")
 	reportBtn:SetCallback("OnClick", function()
-		HonorSpy:Report(UnitIsPlayer("target") and UnitName("target") or nil)
+		HonorSpy:Report(UnitIsPlayer("target") and HonorSpy:getFullUnitName("target") or nil)
 	end)
 	playerStandingsGrp:AddChild(reportBtn)
 
