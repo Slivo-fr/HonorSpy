@@ -139,7 +139,8 @@ function GUI:UpdateTableView()
 				last_seen_human = ""..last_seen..L["s"]
 			end
 			button:SetID(itemIndex);
-			button.Name:SetText(colorize(itemIndex .. ')  ', "GREY") .. colorize(name, class));
+			local splitedName, server = strsplit("-", name)
+			button.Name:SetText(colorize(itemIndex .. ')  ', "GREY") .. colorize(splitedName, class));
 			button.Honor:SetText(colorize(thisWeekHonor, class));
 			if HonorSpy.db.factionrealm.estHonorCol.show then 
 				button.EstHonor:SetText(colorize(estHonor, class)); 
