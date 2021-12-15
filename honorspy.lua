@@ -337,6 +337,8 @@ function HonorSpy:Estimate(playerOfInterest)
 	local t = HonorSpy:BuildStandingsTable(L["EstHonor"])
 	local pool_size = #t;
 	local curHonor = 0;
+	local rp_factor = 2000;
+	local decay_factor = 0.6;
 
 	for i = 1, pool_size do
 		if (playerOfInterest == t[i][1]) then
@@ -348,7 +350,7 @@ function HonorSpy:Estimate(playerOfInterest)
 		return
 	end;
 
-	local RP  = {0, 400} -- RP for each bracket
+	local RP  = {0, 800} -- RP for each bracket
 	local Ranks = {0, 2000} -- RP for each rank
 	local bracket = 1;
 	local inside_br_progress = 0;
@@ -374,12 +376,12 @@ function HonorSpy:Estimate(playerOfInterest)
 	end
 
 	for i = 3,14 do
-		RP[i] = (i-2) * 1000
+		RP[i] = (i-2) * rp_factor
 		Ranks[i] = (i-2) * 5000
 	end
-	local award = RP[bracket] + 1000 * inside_br_progress;
+	local award = RP[bracket] + rp_factor * inside_br_progress;
 	local RP = HonorSpy.db.factionrealm.currentStandings[playerOfInterest].RP;
-	local EstRP = math.floor(RP*0.8+award+.5);
+	local EstRP = math.floor(RP*decay_factor+award+.5);
 	local Rank = HonorSpy.db.factionrealm.currentStandings[playerOfInterest].rank;
 	local EstRank = 14;
 	local Progress = math.floor(HonorSpy.db.factionrealm.currentStandings[playerOfInterest].rankProgress*100);
