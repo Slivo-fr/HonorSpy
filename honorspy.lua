@@ -277,6 +277,22 @@ local options = {
 				HonorSpy:Purge()
 			end
 		},
+		share = {
+			type = 'execute',
+			name = "share",
+			desc = "Share pool data",
+			func = function()
+				HonorSpy:broadcastPlayers(true)
+			end
+		},
+		rank = {
+			type = 'execute',
+			name = "rank",
+			desc = "Display rank information",
+			func = function()
+				HonorSpy:displayRank()
+			end
+		},
 		pool = {
 			type = 'input',
 			name = "poolsize",
@@ -668,6 +684,24 @@ function HonorSpy:ResetWeek()
 	HonorSpy.db.factionrealm.last_reset = getResetTime();
 	HonorSpy:Purge()
 	HonorSpy:Print(L["Weekly data was reset"]);
+end
+
+function HonorSpy:displayRank()
+	NotifyInspect("player");
+	RequestInspectHonorData();
+
+	C_Timer.After(1, function()
+		local rankName, rank = GetPVPRankInfo(UnitPVPRank("player"));
+		local progress = GetInspectPVPRankProgress()
+		local _, _, _, _, thisweekHK, thisWeekHonor, _, lastWeekHonor, standing = GetInspectHonorData();
+
+
+		if (rank ~= nil and progress ~= nil) then
+			print("Rank " .. rank .. " (".. string.format("%d", progress * 100).."%) - Position " .. standing)
+		else
+			print("Pas d'info disponible, reesayez")
+		end
+	end)
 end
 
 function HonorSpy:CheckNeedReset(skipUpdate)
