@@ -128,6 +128,7 @@ function HonorSpy:INSPECT_HONOR_UPDATE()
 	player.standing = standing;
 	if ( inspectedPlayerName == playerName ) then
 		player.estHonor = HonorSpy.db.char.estimated_honor
+		HonorSpy.db.char.latestWeekHonor = thisWeekHonor
 	end
 
 	player.rankProgress = GetInspectPVPRankProgress();
@@ -614,7 +615,8 @@ function HonorSpy:Purge()
 	inspectedPlayers = {};
 	HonorSpy.db.factionrealm.currentStandings={};
 	HonorSpy.db.factionrealm.fakePlayers={};
-	HonorSpy.db.char.original_honor = 0;
+	HonorSpy.db.char.original_honor = HonorSpy.db.char.latestWeekHonor or 0;
+	HonorSpy.db.char.estimated_honor = HonorSpy.db.char.latestWeekHonor or 0;
 	HonorSpyGUI:Reset();
 	HonorSpy:Print(L["All data was purged"]);
 end
@@ -675,16 +677,17 @@ function HonorSpy:CheckNeedReset(skipUpdate)
 	local must_reset_on = getResetTime()
 	if (HonorSpy.db.factionrealm.last_reset ~= must_reset_on) then
 		HonorSpy:ResetWeek()
-		HonorSpy.db.char.original_honor = 0
+		HonorSpy.db.char.original_honor = HonorSpy.db.char.latestWeekHonor or 0
 		HonorSpy.db.char.estimated_honor = 0
 		HonorSpy.db.char.today_kills = {}
 	end
 
 	-- reset daily honor
-	if (HonorSpy.db.factionrealm.currentStandings[playerName] and HonorSpy.db.char.original_honor ~= HonorSpy.db.factionrealm.currentStandings[playerName].thisWeekHonor) then
-		HonorSpy.db.char.original_honor = HonorSpy.db.factionrealm.currentStandings[playerName].thisWeekHonor
+	if (HonorSpy.db.char.latestWeekHonor and HonorSpy.db.char.original_honor ~= HonorSpy.db.char.latestWeekHonor) then
+		HonorSpy.db.char.original_honor = HonorSpy.db.char.latestWeekHonor
 		HonorSpy.db.char.estimated_honor = HonorSpy.db.char.original_honor
 		HonorSpy.db.char.today_kills = {}
+		HonorSpy:Print("Daily honor stats updated");
 	end
 end
 
