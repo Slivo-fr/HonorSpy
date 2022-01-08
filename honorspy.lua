@@ -46,9 +46,18 @@ function HonorSpy:OnInitialize()
 		char = {
 			today_kills = {},
 			estimated_honor = 0,
-			original_honor = 0
+			original_honor = 0,
+			weekly_reset_value = 0,
+			weekly_reset = false,
+			latestWeekHonor = 0,
 		}
 	}, true)
+
+	--HonorSpy:Print("HonorSpy.db.char.currentDay", HonorSpy.db.char.currentDay, self.db.char.currentDay)
+	if (HonorSpy.db.char.currentDay == nil) then
+		--print ("OnInitialize L60 currentDay==nil", HonorSpy.db.char.currentDay);
+		HonorSpy.db.char.currentDay = HonorSpy:getCurrentDate()
+	end
 
 	self:SecureHook("InspectUnit");
 	self:SecureHook("UnitPopup_ShowMenu");
@@ -126,9 +135,16 @@ function HonorSpy:INSPECT_HONOR_UPDATE()
 	player.thisWeekHonor = thisWeekHonor;
 	player.lastWeekHonor = lastWeekHonor;
 	player.standing = standing;
-	if ( inspectedPlayerName == playerName ) then
-		player.estHonor = HonorSpy.db.char.estimated_honor
+	if (inspectedPlayerName == playerName) then
 		HonorSpy.db.char.latestWeekHonor = thisWeekHonor
+		if (HonorSpy.db.char.weekly_reset) then
+			if (thisWeekHonor ~= 0) then
+				HonorSpy:Print("Weekly honor has not been updated properly");
+				HonorSpy.db.char.weekly_reset_value = thisWeekHonor
+			end
+			HonorSpy.db.char.weekly_reset = false
+		end
+		player.estHonor = HonorSpy.db.char.estimated_honor
 	end
 
 	player.rankProgress = GetInspectPVPRankProgress();
@@ -633,8 +649,7 @@ function HonorSpy:Purge()
 	inspectedPlayers = {};
 	HonorSpy.db.factionrealm.currentStandings={};
 	HonorSpy.db.factionrealm.fakePlayers={};
-	HonorSpy.db.char.original_honor = HonorSpy.db.char.latestWeekHonor or 0;
-	HonorSpy.db.char.estimated_honor = HonorSpy.db.char.latestWeekHonor or 0;
+	HonorSpy.db.char.original_honor = 0;
 	HonorSpyGUI:Reset();
 	HonorSpy:Print(L["All data was purged"]);
 end
@@ -713,18 +728,58 @@ function HonorSpy:CheckNeedReset(skipUpdate)
 	local must_reset_on = getResetTime()
 	if (HonorSpy.db.factionrealm.last_reset ~= must_reset_on) then
 		HonorSpy:ResetWeek()
-		HonorSpy.db.char.original_honor = HonorSpy.db.char.latestWeekHonor or 0
+		HonorSpy.db.char.original_honor = 0
 		HonorSpy.db.char.estimated_honor = 0
-		HonorSpy.db.char.today_kills = {}
+		HonorSpy.db.char.weekly_reset = true
+		HonorSpy.db.char.weekly_reset_value = 0
+		HonorSpy.db.char.latestWeekHonor = 0
+		HonorSpy:resetTodayKills()
 	end
 
 	-- reset daily honor
-	if (HonorSpy.db.char.latestWeekHonor and HonorSpy.db.char.original_honor ~= HonorSpy.db.char.latestWeekHonor) then
+	if (
+		not HonorSpy.db.char.weekly_reset and
+		HonorSpy.db.char.latestWeekHonor and
+		HonorSpy.db.char.original_honor ~= HonorSpy.db.char.latestWeekHonor and
+		HonorSpy.db.char.weekly_reset_value ~= HonorSpy.db.char.latestWeekHonor
+	) then
 		HonorSpy.db.char.original_honor = HonorSpy.db.char.latestWeekHonor
 		HonorSpy.db.char.estimated_honor = HonorSpy.db.char.original_honor
-		HonorSpy.db.char.today_kills = {}
 		HonorSpy:Print("Daily honor stats updated");
 	end
+
+	-- handling reseting "today_kills" on a new day to keep estimate accurate event if blizz doesn't update
+	if (HonorSpy:isNewDay()) then
+		HonorSpy:resetTodayKills()
+		HonorSpy:Print("Daily kills have been reset");
+	end
+
+end
+
+function HonorSpy:resetTodayKills()
+	HonorSpy.db.char.today_kills = {}
+	HonorSpy.db.char.currentDay = HonorSpy:getCurrentDate()
+end
+
+function HonorSpy:getCurrentDate()
+	return date("%Y/%m/%d")
+end
+
+function HonorSpy:getCurrentHour()
+	return tonumber(date("%H"))
+end
+
+function HonorSpy:isNewDay()
+	return HonorSpy.db.char.currentDay ~= HonorSpy:getCurrentDate() and HonorSpy:getCurrentHour() > 6
+end
+
+function HonorSpy:simulateWeeklyReset()
+	HonorSpy:ResetWeek()
+	HonorSpy.db.char.original_honor = 0
+	HonorSpy.db.char.estimated_honor = 0
+	HonorSpy.db.char.weekly_reset = true
+	HonorSpy.db.char.weekly_reset_value = 0
+	HonorSpy:resetTodayKills()
 end
 
 -- Minimap icon
@@ -745,7 +800,7 @@ function DrawMinimapIcon()
 			end
 		end,
 		OnTooltipShow = function(tooltip)
-			tooltip:AddDoubleLine(format("%s", addonName), format("|cff777777v%s", GetAddOnMetadata(addonName, "Version")));
+			tooltip:AddLine(format("%s", addonName));
 			tooltip:AddLine("|cff777777by Kakysha|r");
 			tooltip:AddLine("|cFFCFCFCFLeft Click: |r" .. L['Show HonorSpy Standings']);
 			tooltip:AddLine("|cFFCFCFCFMiddle Click: |r" .. L['Report Target']);
@@ -757,7 +812,7 @@ end
 function PrintWelcomeMsg()
 	local realm = GetRealmName()
 	local faction = UnitFactionGroup("player")
-	local msg = format("|cffAAAAAAversion: %s, bugs & features: github.com/kakysha/honorspy|r\n|cff209f9b", GetAddOnMetadata(addonName, "Version"))
+	local msg = format("version: %s", GetAddOnMetadata("HonorSpy", "Version"))
 	if (realm == "Earthshaker" and faction == "Horde") then
 		msg = msg .. format("You are lucky enough to play with HonorSpy author on one |cffFFFFFF%s |cff209f9brealm! Feel free to mail me (|cff8787edKakysha|cff209f9b) a supportive %s  tip or kind word!", realm, GetCoinTextureString(50000))
 	end
