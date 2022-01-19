@@ -53,11 +53,18 @@ function HonorSpy:OnInitialize()
 		}
 	}, true)
 
-	--HonorSpy:Print("HonorSpy.db.char.currentDay", HonorSpy.db.char.currentDay, self.db.char.currentDay)
+	-- Set current day if new user
 	if (HonorSpy.db.char.currentDay == nil) then
-		--print ("OnInitialize L60 currentDay==nil", HonorSpy.db.char.currentDay);
 		HonorSpy.db.char.currentDay = HonorSpy:getCurrentDate()
 	end
+
+	-- Set reset day if new char / user
+	if (HonorSpy.db.char.lastReset == nil) then
+		HonorSpy.db.char.lastReset = getResetTime()
+	end
+
+	--print("Init")
+	--DevTools_Dump(HonorSpy.db.char)
 
 	self:SecureHook("InspectUnit");
 	self:SecureHook("UnitPopup_ShowMenu");
@@ -77,7 +84,7 @@ function HonorSpy:OnInitialize()
 	PrintWelcomeMsg();
 	DBHealthCheck()
 
-	C_Timer.After(30, function() HonorSpy:UpdatePlayerData() end)
+	C_Timer.After(15, function() HonorSpy:CheckNeedReset() end)
 end
 
 local inspectedPlayers = {}; -- stores last_checked time of all players met
@@ -97,8 +104,9 @@ local function StartInspecting(unitID)
 		ClearInspectPlayer();
 		inspectedPlayerName = nil;
 	end
+	--print("StartInspecting 14", name,  inspectedPlayerName)
 	if (name == nil
-		or name == inspectedPlayerName
+		or (name == inspectedPlayerName and not UnitIsUnit('player', unitID))
 		or not UnitIsPlayer(unitID)
 		or not UnitIsFriend("player", unitID)
 		or not CheckInteractDistance(unitID, 1)
@@ -113,6 +121,8 @@ local function StartInspecting(unitID)
 	if (GetServerTime() - player.last_checked < 30) then -- 30 seconds until new inspection request
 		return
 	end
+
+	--print("StartInspecting 3")
 	-- we gonna inspect new player, clear old one
 	ClearInspectPlayer();
 	inspectedPlayerName = name;
@@ -124,6 +134,7 @@ local function StartInspecting(unitID)
 end
 
 function HonorSpy:INSPECT_HONOR_UPDATE()
+	--print("INSPECT_HONOR_UPDATE 1")
 	if (inspectedPlayerName == nil or paused or not HasInspectHonorData()) then
 		return;
 	end
@@ -136,6 +147,7 @@ function HonorSpy:INSPECT_HONOR_UPDATE()
 	player.lastWeekHonor = lastWeekHonor;
 	player.standing = standing;
 	if (inspectedPlayerName == playerName) then
+		--if (HonorSpy.db.char.latestWeekHonor ~= thisWeekHonor) then print("debug honor inspect player", "thisWeekHonor", thisWeekHonor) end
 		HonorSpy.db.char.latestWeekHonor = thisWeekHonor
 		if (HonorSpy.db.char.weekly_reset) then
 			if (thisWeekHonor ~= 0) then
@@ -146,6 +158,8 @@ function HonorSpy:INSPECT_HONOR_UPDATE()
 		end
 		player.estHonor = HonorSpy.db.char.estimated_honor
 	end
+
+	--print("INSPECT_HONOR_UPDATE 3")
 
 	player.rankProgress = GetInspectPVPRankProgress();
 	ClearInspectPlayer();
@@ -290,7 +304,7 @@ local options = {
 			name = "debug",
 			desc = "debug",
 			func = function()
-				HonorSpy:Purge()
+				HonorSpy:PurgeRealmData()
 			end
 		},
 		share = {
@@ -307,6 +321,22 @@ local options = {
 			desc = "Display rank information",
 			func = function()
 				HonorSpy:displayRank()
+			end
+		},
+		reset = {
+			type = 'execute',
+			name = "reset",
+			desc = "Force reset player data",
+			func = function()
+				HonorSpy:forceReset()
+			end
+		},
+		update = {
+			type = 'execute',
+			name = "update",
+			desc = "Force update player data",
+			func = function()
+				HonorSpy:forceUpdate()
 			end
 		},
 		pool = {
@@ -645,13 +675,13 @@ function HonorSpy:TestNextFakePlayer()
 end
 
 -- RESET WEEK
-function HonorSpy:Purge()
+function HonorSpy:PurgeRealmData()
 	inspectedPlayers = {};
 	HonorSpy.db.factionrealm.currentStandings={};
 	HonorSpy.db.factionrealm.fakePlayers={};
-	HonorSpy.db.char.original_honor = 0;
+	--HonorSpy.db.char.original_honor = 0;
 	HonorSpyGUI:Reset();
-	HonorSpy:Print(L["All data was purged"]);
+	HonorSpy:Print("All realm data was purged");
 end
 
 function getResetTime()
@@ -696,9 +726,24 @@ function getResetTime()
 end
 
 function HonorSpy:ResetWeek()
+	HonorSpy:PurgeRealmData()
 	HonorSpy.db.factionrealm.last_reset = getResetTime();
-	HonorSpy:Purge()
-	HonorSpy:Print(L["Weekly data was reset"]);
+	--HonorSpy:Print("Weekly realm data was reset");
+end
+
+function HonorSpy:resetCharacter()
+	HonorSpy:purgeCharacterData()
+	HonorSpy.db.char.weekly_reset = true
+	HonorSpy.db.char.weekly_reset_value = 0
+	HonorSpy.db.char.lastReset = getResetTime();
+	HonorSpy:Print("Weekly character data was reset");
+end
+
+function HonorSpy:purgeCharacterData()
+	HonorSpy.db.char.original_honor = 0
+	HonorSpy.db.char.estimated_honor = 0
+	HonorSpy.db.char.latestWeekHonor = 0
+	HonorSpy:resetTodayKills()
 end
 
 function HonorSpy:displayRank()
@@ -719,6 +764,11 @@ function HonorSpy:displayRank()
 	end)
 end
 
+function HonorSpy:testManuelWeekReset()
+	HonorSpy.db.factionrealm.last_reset = 0
+	HonorSpy.db.char.lastReset = 0
+end
+
 function HonorSpy:CheckNeedReset(skipUpdate)
 	if (not skipUpdate) then
 		HonorSpy:UpdatePlayerData(function() HonorSpy:CheckNeedReset(true) end)
@@ -728,21 +778,21 @@ function HonorSpy:CheckNeedReset(skipUpdate)
 	local must_reset_on = getResetTime()
 	if (HonorSpy.db.factionrealm.last_reset ~= must_reset_on) then
 		HonorSpy:ResetWeek()
-		HonorSpy.db.char.original_honor = 0
-		HonorSpy.db.char.estimated_honor = 0
-		HonorSpy.db.char.weekly_reset = true
-		HonorSpy.db.char.weekly_reset_value = 0
-		HonorSpy.db.char.latestWeekHonor = 0
-		HonorSpy:resetTodayKills()
+	end
+
+	-- reset weekly character data
+	if (HonorSpy.db.char.lastReset ~= must_reset_on) then
+		HonorSpy:resetCharacter()
 	end
 
 	-- reset daily honor
 	if (
 		not HonorSpy.db.char.weekly_reset and
-		HonorSpy.db.char.latestWeekHonor and
 		HonorSpy.db.char.original_honor ~= HonorSpy.db.char.latestWeekHonor and
 		HonorSpy.db.char.weekly_reset_value ~= HonorSpy.db.char.latestWeekHonor
 	) then
+		--print("debug daily reset")
+		--DevTools_Dump(HonorSpy.db.char)
 		HonorSpy.db.char.original_honor = HonorSpy.db.char.latestWeekHonor
 		HonorSpy.db.char.estimated_honor = HonorSpy.db.char.original_honor
 		HonorSpy:Print("Daily honor stats updated");
@@ -751,7 +801,7 @@ function HonorSpy:CheckNeedReset(skipUpdate)
 	-- handling reseting "today_kills" on a new day to keep estimate accurate event if blizz doesn't update
 	if (HonorSpy:isNewDay()) then
 		HonorSpy:resetTodayKills()
-		HonorSpy:Print("Daily kills have been reset");
+		--HonorSpy:Print("Daily kills have been reset");
 	end
 
 end
@@ -773,14 +823,29 @@ function HonorSpy:isNewDay()
 	return HonorSpy.db.char.currentDay ~= HonorSpy:getCurrentDate() and HonorSpy:getCurrentHour() > 6
 end
 
-function HonorSpy:simulateWeeklyReset()
-	HonorSpy:ResetWeek()
+function HonorSpy:forceReset()
 	HonorSpy.db.char.original_honor = 0
 	HonorSpy.db.char.estimated_honor = 0
-	HonorSpy.db.char.weekly_reset = true
 	HonorSpy.db.char.weekly_reset_value = 0
-	HonorSpy:resetTodayKills()
+	HonorSpy:Print("Player stats has been reset")
 end
+
+function HonorSpy:forceUpdate()
+	HonorSpy.db.char.original_honor = HonorSpy.db.char.latestWeekHonor
+	HonorSpy.db.char.estimated_honor = HonorSpy.db.char.latestWeekHonor
+	HonorSpy.db.char.weekly_reset_value = 0
+	HonorSpy:Print("Player stats has been force updated")
+end
+
+--function HonorSpy:simulateWeeklyReset()
+--	HonorSpy:ResetWeek()
+--	HonorSpy.db.char.original_honor = 0
+--	HonorSpy.db.char.estimated_honor = 0
+--	HonorSpy.db.char.weekly_reset = true
+--	HonorSpy.db.char.weekly_reset_value = 0
+--	HonorSpy.db.char.latestWeekHonor = 0
+--	HonorSpy:resetTodayKills()
+--end
 
 -- Minimap icon
 function DrawMinimapIcon()
@@ -828,7 +893,7 @@ function DBHealthCheck()
 	end
 
 	if (HonorSpy.db.factionrealm.actualCommPrefix ~= commPrefix) then
-		HonorSpy:Purge()
+		HonorSpy:PurgeRealmData()
 		HonorSpy.db.factionrealm.actualCommPrefix = commPrefix
 	end
 

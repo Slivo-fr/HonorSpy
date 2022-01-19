@@ -1,5 +1,5 @@
 ## Interface: 11401
-## Title: HonorSpy |cff00aa00v19|r
+## Title: HonorSpy |cff00aa00v20|r
 
 ## Notes: Records PvP standings of all players
 ## Notes-ruRU: Записывает PvP позиции всех игроков
@@ -8,7 +8,7 @@
 
 ## Author: kakysha
 ## OptionalDeps: Ace3
-## Version: 19
+## Version: 20
 
 ## X-Category: Battlegrounds/PvP
 ## SavedVariables: HonorSpyDB
