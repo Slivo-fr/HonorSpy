@@ -684,6 +684,10 @@ function HonorSpy:PurgeRealmData()
 	HonorSpy:Print("All realm data was purged");
 end
 
+function HonorSpy:isWednesday()
+	return tonumber(date("!%w", GetServerTime())) == 3
+end
+
 function getResetTime()
 	local currentUnixTime = GetServerTime()
 	local regionId = GetCurrentRegion()
@@ -733,7 +737,9 @@ end
 
 function HonorSpy:resetCharacter()
 	HonorSpy:purgeCharacterData()
-	HonorSpy.db.char.weekly_reset = true
+	if (HonorSpy:isWednesday()) then
+		HonorSpy.db.char.weekly_reset = true
+	end
 	HonorSpy.db.char.weekly_reset_value = 0
 	HonorSpy.db.char.lastReset = getResetTime();
 	HonorSpy:Print("Weekly character data was reset");
