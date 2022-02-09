@@ -170,7 +170,7 @@ function GUI:UpdateTableView()
 	end
 
 	local buttonHeight = scroll.buttonHeight;
-	local totalHeight = #rows * buttonHeight;
+	local totalHeight = (#rows+2) * buttonHeight;
 	local shownHeight = #buttons * buttonHeight;
 
 	HybridScrollFrame_Update(scroll, totalHeight, shownHeight);

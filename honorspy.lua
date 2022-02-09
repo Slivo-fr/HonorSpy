@@ -50,17 +50,23 @@ function HonorSpy:OnInitialize()
 			weekly_reset_value = 0,
 			weekly_reset = false,
 			latestWeekHonor = 0,
+			daily_kill_reset_estimated_honor = 0,
 		}
 	}, true)
 
-	-- Set current day if new user
+	-- Set current day if new user / update
 	if (HonorSpy.db.char.currentDay == nil) then
 		HonorSpy.db.char.currentDay = HonorSpy:getCurrentDate()
 	end
 
-	-- Set reset day if new char / user
+	-- Set reset day if new char / user / update
 	if (HonorSpy.db.char.lastReset == nil) then
 		HonorSpy.db.char.lastReset = getResetTime()
+	end
+
+	-- Set reset daily_kill_reset_estimated_honor if new char / user / update
+	if (HonorSpy.db.char.daily_kill_reset_estimated_honor == nil) then
+		HonorSpy.db.char.daily_kill_reset_estimated_honor = HonorSpy.db.char.estimated_honor
 	end
 
 	--print("Init")
@@ -85,6 +91,7 @@ function HonorSpy:OnInitialize()
 	DBHealthCheck()
 
 	C_Timer.After(15, function() HonorSpy:CheckNeedReset() end)
+	C_Timer.NewTicker(60*60, function() HonorSpy:broadcastPlayers(true) end)
 end
 
 local inspectedPlayers = {}; -- stores last_checked time of all players met
@@ -147,11 +154,11 @@ function HonorSpy:INSPECT_HONOR_UPDATE()
 	player.lastWeekHonor = lastWeekHonor;
 	player.standing = standing;
 	if (inspectedPlayerName == playerName) then
-		--if (HonorSpy.db.char.latestWeekHonor ~= thisWeekHonor) then print("debug honor inspect player", "thisWeekHonor", thisWeekHonor) end
+		if (HonorSpy.db.char.latestWeekHonor ~= thisWeekHonor) then print("debug honor inspect player", "thisWeekHonor", thisWeekHonor) end
 		HonorSpy.db.char.latestWeekHonor = thisWeekHonor
 		if (HonorSpy.db.char.weekly_reset) then
 			if (thisWeekHonor ~= 0) then
-				HonorSpy:Print("Weekly honor has not been updated properly");
+				HonorSpy:Print("Blizzard Weekly honor has not been updated - Fixing estimated honor");
 				HonorSpy.db.char.weekly_reset_value = thisWeekHonor
 			end
 			HonorSpy.db.char.weekly_reset = false
@@ -741,6 +748,7 @@ function HonorSpy:resetCharacter()
 		HonorSpy.db.char.weekly_reset = true
 	end
 	HonorSpy.db.char.weekly_reset_value = 0
+	HonorSpy.db.char.daily_kill_reset_estimated_honor = 0
 	HonorSpy.db.char.lastReset = getResetTime();
 	HonorSpy:Print("Weekly character data was reset");
 end
@@ -749,6 +757,7 @@ function HonorSpy:purgeCharacterData()
 	HonorSpy.db.char.original_honor = 0
 	HonorSpy.db.char.estimated_honor = 0
 	HonorSpy.db.char.latestWeekHonor = 0
+	HonorSpy.db.char.daily_kill_reset_estimated_honor = 0
 	HonorSpy:resetTodayKills()
 end
 
@@ -800,7 +809,13 @@ function HonorSpy:CheckNeedReset(skipUpdate)
 		--print("debug daily reset")
 		--DevTools_Dump(HonorSpy.db.char)
 		HonorSpy.db.char.original_honor = HonorSpy.db.char.latestWeekHonor
-		HonorSpy.db.char.estimated_honor = HonorSpy.db.char.original_honor
+
+		if (HonorSpy.db.char.daily_kill_reset_estimated_honor == HonorSpy.db.char.estimated_honor) then
+			HonorSpy.db.char.estimated_honor = HonorSpy.db.char.original_honor
+			--print("delta correct - reset normal")
+		--else
+		--	print("delta incorrect - reset ajusté")
+		end
 		HonorSpy:Print("Daily honor stats updated");
 	end
 
@@ -814,6 +829,7 @@ end
 
 function HonorSpy:resetTodayKills()
 	HonorSpy.db.char.today_kills = {}
+	HonorSpy.db.char.daily_kill_reset_estimated_honor = HonorSpy.db.char.estimated_honor
 	HonorSpy.db.char.currentDay = HonorSpy:getCurrentDate()
 end
 
