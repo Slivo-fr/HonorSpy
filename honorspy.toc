@@ -1,5 +1,5 @@
 ## Interface: 11402
-## Title: HonorSpy |cff00aa00v21|r
+## Title: HonorSpy |cff00aa00v22|r
 
 ## Notes: Records PvP standings of all players
 ## Notes-ruRU: Записывает PvP позиции всех игроков
