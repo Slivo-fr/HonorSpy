@@ -154,7 +154,7 @@ function HonorSpy:INSPECT_HONOR_UPDATE()
 	player.lastWeekHonor = lastWeekHonor;
 	player.standing = standing;
 	if (inspectedPlayerName == playerName) then
-		if (HonorSpy.db.char.latestWeekHonor ~= thisWeekHonor) then print("debug honor inspect player", "thisWeekHonor", thisWeekHonor) end
+		--if (HonorSpy.db.char.latestWeekHonor ~= thisWeekHonor) then print("debug honor inspect player", "thisWeekHonor", thisWeekHonor) end
 		HonorSpy.db.char.latestWeekHonor = thisWeekHonor
 		if (HonorSpy.db.char.weekly_reset) then
 			if (thisWeekHonor ~= 0) then

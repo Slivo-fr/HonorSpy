@@ -10,10 +10,7 @@
 ## OptionalDeps: Ace3
 ## Version: 22
 
-## X-Category: Battlegrounds/PvP
 ## SavedVariables: HonorSpyDB
-
-## X-Curse-Project-ID: 348370
 
 Libs\embeds.xml
 Localizations\embeds.xml
