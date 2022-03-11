@@ -23,7 +23,7 @@ local colors = {
 
 local playerName = UnitName("player")
 
-function GUI:Show(skipUpdate, sort_column)
+function GUI:Show(skipUpdate, sort_column, skip_estimate)
 	if (not skipUpdate) then
 		HonorSpy:UpdatePlayerData(function()
 			if (mainFrame:IsShown()) then
@@ -52,21 +52,23 @@ function GUI:Show(skipUpdate, sort_column)
 			L['Pool Size'] .. ":" .. colorize(' %d', "ORANGE"),#rows)
 	end
 	poolSize:SetText(poolSizeText)
-	
-	local pool_size, standing, bracket, RP, EstRP, Rank, Progress, EstRank, EstProgress = HonorSpy:Estimate()
-	if (standing) then
-		local playerText = colorize(L['Progress of'], "GREY") .. ' ' .. colorize(playerName, HonorSpy.db.factionrealm.currentStandings[playerName].class)
-		playerText = playerText .. ", " .. colorize(L['Estimated Honor'] .. ': ', "GREY") .. colorize(HonorSpy.db.char.estimated_honor, "ORANGE")
-		playerText = playerText .. '\n' .. colorize(L['Standing'] .. ':', "GREY") .. colorize(standing, "ORANGE")
-		playerText = playerText .. ' ' .. colorize(L['Bracket'] .. ':', "GREY") .. colorize(bracket, "ORANGE")
-		playerText = playerText .. ' ' .. colorize(L['Current Rank'] .. ':', "GREY") .. colorize(format('%d (%d%%)', Rank, Progress), "ORANGE")
-		playerText = playerText .. ' ' .. colorize(L['Next Week Rank'] .. ':', "GREY") .. colorize(format('%d (%d%%)', EstRank, EstProgress), EstRP >= RP and "GREEN" or "RED")
-		playerStandings:SetText(playerText .. '\n')
 
-		scroll.scrollBar:SetValue(standing * scroll.buttonHeight-200)
-		scroll.scrollBar.thumbTexture:Show()
-	else
-		playerStandings:SetText(format('%s %s, %s: %s\n%s\n', L['Progress of'], playerName, colorize(L['Estimated Honor'], "GREY"), colorize(HonorSpy.db.char.estimated_honor, "ORANGE"), L['You have 0 honor or not enough HKs, min = 15']))
+	if (skip_estimate ~= true) then
+		local pool_size, standing, bracket, RP, EstRP, Rank, Progress, EstRank, EstProgress = HonorSpy:Estimate()
+		if (standing) then
+			local playerText = colorize(L['Progress of'], "GREY") .. ' ' .. colorize(playerName, HonorSpy.db.factionrealm.currentStandings[playerName].class)
+			playerText = playerText .. ", " .. colorize(L['Estimated Honor'] .. ': ', "GREY") .. colorize(HonorSpy.db.char.estimated_honor, "ORANGE")
+			playerText = playerText .. '\n' .. colorize(L['Standing'] .. ':', "GREY") .. colorize(standing, "ORANGE")
+			playerText = playerText .. ' ' .. colorize(L['Bracket'] .. ':', "GREY") .. colorize(bracket, "ORANGE")
+			playerText = playerText .. ' ' .. colorize(L['Current Rank'] .. ':', "GREY") .. colorize(format('%d (%d%%)', Rank, Progress), "ORANGE")
+			playerText = playerText .. ' ' .. colorize(L['Next Week Rank'] .. ':', "GREY") .. colorize(format('%d (%d%%)', EstRank, EstProgress), EstRP >= RP and "GREEN" or "RED")
+			playerStandings:SetText(playerText .. '\n')
+
+			scroll.scrollBar:SetValue(standing * scroll.buttonHeight-200)
+			scroll.scrollBar.thumbTexture:Show()
+		else
+			playerStandings:SetText(format('%s %s, %s: %s\n%s\n', L['Progress of'], playerName, colorize(L['Estimated Honor'], "GREY"), colorize(HonorSpy.db.char.estimated_honor, "ORANGE"), L['You have 0 honor or not enough HKs, min = 15']))
+		end
 	end
 
 	reportBtn:SetText(L['Report'] .. ' ' .. (UnitIsPlayer("target") and UnitName("target") or ''))
@@ -248,7 +250,7 @@ function GUI:PrepareGUI()
 
 	local btn = AceGUI:Create("InteractiveLabel")
     btn:SetCallback("OnClick", function()
-			GUI:Show(false, L["Name"])
+			GUI:Show(false, L["Name"], true)
 		end)
 		btn.highlight:SetColorTexture(0.3, 0.3, 0.3, 0.5)
 	btn:SetWidth(150)
@@ -257,7 +259,7 @@ function GUI:PrepareGUI()
 
 	local knownHonorbtn = AceGUI:Create("InteractiveLabel")
 	knownHonorbtn:SetCallback("OnClick", function()
-		GUI:Show(false, L["Honor"])
+		GUI:Show(false, L["Honor"], true)
 	end)
 	knownHonorbtn.highlight:SetColorTexture(0.3, 0.3, 0.3, 0.5)
 	knownHonorbtn:SetWidth(80)
@@ -269,7 +271,7 @@ function GUI:PrepareGUI()
 
 		btn = AceGUI:Create("InteractiveLabel")
 		btn:SetCallback("OnClick", function()
-			GUI:Show(false, L["EstHonor"])
+			GUI:Show(false, L["EstHonor"], true)
 		end)
 		btn.highlight:SetColorTexture(0.3, 0.3, 0.3, 0.5)
 		btn:SetWidth(100)
@@ -282,7 +284,7 @@ function GUI:PrepareGUI()
         
         btn = AceGUI:Create("InteractiveLabel")
         btn:SetCallback("OnClick", function()
-            GUI:Show(false, L["ThisWeekHonor"])
+            GUI:Show(false, L["ThisWeekHonor"], true)
         end)
         btn.highlight:SetColorTexture(0.3, 0.3, 0.3, 0.5)
         btn:SetWidth(100)
@@ -297,7 +299,7 @@ function GUI:PrepareGUI()
 
 	btn = AceGUI:Create("InteractiveLabel")
 	btn:SetCallback("OnClick", function()
-		GUI:Show(false, L["Standing"])
+		GUI:Show(false, L["Standing"], true)
 	end)
 	btn.highlight:SetColorTexture(0.3, 0.3, 0.3, 0.5)
 	btn:SetWidth(70)
@@ -311,7 +313,7 @@ function GUI:PrepareGUI()
 
 	btn = AceGUI:Create("InteractiveLabel")
 	btn:SetCallback("OnClick", function()
-		GUI:Show(false, L["Rank"])
+		GUI:Show(false, L["Rank"], true)
 	end)
 	btn.highlight:SetColorTexture(0.3, 0.3, 0.3, 0.5)
 	btn:SetWidth(50)
