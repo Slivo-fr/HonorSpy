@@ -215,8 +215,8 @@ function GUI:PrepareGUI()
 	tinsert(UISpecialFrames, "HonorSpyGUI_MainFrame")	-- allow ESC close
 	mainFrame:SetTitle(L["HonorSpy Standings"])
     local pixels = 600
-    if HonorSpy.db.factionrealm.estHonorCol.show then pixels = 680 end
-    if HonorSpy.db.factionrealm.estTodayHonorCol.show then pixels = pixels + 80 end
+    if HonorSpy.db.factionrealm.estHonorCol.show then pixels = 700 end
+    if HonorSpy.db.factionrealm.estTodayHonorCol.show then pixels = pixels + 100 end
     mainFrame:SetWidth(pixels)
 	mainFrame:SetLayout("List")
 	mainFrame:EnableResize(false)
@@ -272,7 +272,7 @@ function GUI:PrepareGUI()
 			GUI:Show(false, L["EstHonor"])
 		end)
 		btn.highlight:SetColorTexture(0.3, 0.3, 0.3, 0.5)
-		btn:SetWidth(80)
+		btn:SetWidth(100)
 		btn:SetText(colorize(L["EstHonor"], "ORANGE"))
 		tableHeader:AddChild(btn)
 	end
@@ -285,7 +285,7 @@ function GUI:PrepareGUI()
             GUI:Show(false, L["ThisWeekHonor"])
         end)
         btn.highlight:SetColorTexture(0.3, 0.3, 0.3, 0.5)
-        btn:SetWidth(80)
+        btn:SetWidth(100)
         btn:SetText(colorize(L["ThisWeekHonor"], "ORANGE"))
         tableHeader:AddChild(btn)
 	end
