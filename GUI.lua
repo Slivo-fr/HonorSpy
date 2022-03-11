@@ -150,7 +150,7 @@ function GUI:UpdateTableView()
 			if tonumber(thisWeekHonor) == 1 then thisWeekHonor = 0 end
             button.Honor:SetText(colorize(thisWeekHonor, class));
 			if HonorSpy.db.factionrealm.estHonorCol.show then
-                button.EstWeekHonor:SetWidth(80);
+                button.EstWeekHonor:SetWidth(100);
 				if (tonumber(estHonor) ~= nil) then
 					local estTodayHonor = estHonor - thisWeekHonor
 					-- This may happen when blizz value is up to date but estimation is not
@@ -166,7 +166,7 @@ function GUI:UpdateTableView()
                 button.EstWeekHonor:SetWidth(0);
 			end
             if HonorSpy.db.factionrealm.estTodayHonorCol.show then
-				button.EstHonor:SetWidth(80);
+				button.EstHonor:SetWidth(100);
 				if (tonumber(estHonor) ~= nil) then
 					local estTodayHonor = estHonor - thisWeekHonor
 					-- This may happen when blizz value is up to date but estimation is not
