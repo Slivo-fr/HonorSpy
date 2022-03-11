@@ -85,7 +85,7 @@ function GUI:Toggle()
 	if (mainFrame and mainFrame:IsShown()) then
 		GUI:Hide()
 	else
-		GUI:Show(false, L["KnownHonor"])
+		GUI:Show(false, L["ThisWeekHonor"])
 	end
 end
 
@@ -255,7 +255,7 @@ function GUI:PrepareGUI()
 	btn:SetText(colorize(L["Name"], "ORANGE"))
 	tableHeader:AddChild(btn)
 
-	knownHonorbtn = AceGUI:Create("InteractiveLabel")
+	local knownHonorbtn = AceGUI:Create("InteractiveLabel")
 	knownHonorbtn:SetCallback("OnClick", function()
 		GUI:Show(false, L["Honor"])
 	end)
@@ -263,19 +263,6 @@ function GUI:PrepareGUI()
 	knownHonorbtn:SetWidth(80)
 	knownHonorbtn:SetText(colorize(L["Honor"], "ORANGE"))
 	tableHeader:AddChild(knownHonorbtn)
-
-	if HonorSpy.db.factionrealm.estHonorCol.show then
-        knownHonorbtn:SetText(colorize(L["KnownHonor"], "ORANGE"))
-        
-        btn = AceGUI:Create("InteractiveLabel")
-        btn:SetCallback("OnClick", function()
-            GUI:Show(false, L["ThisWeekHonor"])
-        end)
-        btn.highlight:SetColorTexture(0.3, 0.3, 0.3, 0.5)
-        btn:SetWidth(80)
-        btn:SetText(colorize(L["ThisWeekHonor"], "ORANGE"))
-        tableHeader:AddChild(btn)
-	end
     
 	if HonorSpy.db.factionrealm.estTodayHonorCol.show then
         knownHonorbtn:SetText(colorize(L["KnownHonor"], "ORANGE"))
@@ -288,6 +275,19 @@ function GUI:PrepareGUI()
 		btn:SetWidth(80)
 		btn:SetText(colorize(L["EstHonor"], "ORANGE"))
 		tableHeader:AddChild(btn)
+	end
+
+    if HonorSpy.db.factionrealm.estHonorCol.show then
+        knownHonorbtn:SetText(colorize(L["KnownHonor"], "ORANGE"))
+        
+        btn = AceGUI:Create("InteractiveLabel")
+        btn:SetCallback("OnClick", function()
+            GUI:Show(false, L["ThisWeekHonor"])
+        end)
+        btn.highlight:SetColorTexture(0.3, 0.3, 0.3, 0.5)
+        btn:SetWidth(80)
+        btn:SetText(colorize(L["ThisWeekHonor"], "ORANGE"))
+        tableHeader:AddChild(btn)
 	end
 
 	btn = AceGUI:Create("InteractiveLabel")
