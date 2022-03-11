@@ -3,7 +3,7 @@ HonorSpy = LibStub("AceAddon-3.0"):NewAddon("HonorSpy", "AceConsole-3.0", "AceHo
 local L = LibStub("AceLocale-3.0"):GetLocale("HonorSpy", true)
 
 local addonName = GetAddOnMetadata("HonorSpy", "Title");
-local commPrefix = addonName .. "5";
+local commPrefix = addonName .. "4";
 
 local paused = false; -- pause all inspections when user opens inspect frame
 local playerName = UnitName("player");
@@ -955,6 +955,7 @@ function HonorSpy:OnInitialize()
 			last_reset = 0,
 			minimapButton = {hide = false},
 			estHonorCol = {show = false},
+            estTodayHonorCol = {show = false},
 			actualCommPrefix = "",
 			fakePlayers = {},
 			goodPlayers = {},
