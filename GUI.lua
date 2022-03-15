@@ -31,7 +31,7 @@ function GUI:Show(skipUpdate, sort_column)
 			end
 		end)
 	end
-	
+
 	rows = HonorSpy:BuildStandingsTable(sort_column)
 	local brk = HonorSpy:GetBrackets(#rows)
 	for i = 1, #brk do
@@ -41,18 +41,18 @@ function GUI:Show(skipUpdate, sort_column)
 	end
 
 	local poolSizeText
-	
+
 	if HonorSpy.db.factionrealm.poolBoost > 0 then
 		poolSizeText = format(
-			L['Natural Pool Size'] .. ":" .. colorize(' %d', "RED") .. " - " .. 
-			L['Boosted Pool Size'] .. ":" .. colorize(' %d', "GREEN"), 
+			L['Natural Pool Size'] .. ":" .. colorize(' %d', "RED") .. " - " ..
+			L['Boosted Pool Size'] .. ":" .. colorize(' %d', "GREEN"),
 			#rows, #rows + HonorSpy:GetPoolBoostCount())
 	else
 		poolSizeText = format(
 			L['Pool Size'] .. ":" .. colorize(' %d', "ORANGE"),#rows)
 	end
 	poolSize:SetText(poolSizeText)
-	
+
 	local pool_size, standing, bracket, RP, EstRP, Rank, Progress, EstRank, EstProgress = HonorSpy:Estimate()
 	if (standing) then
 		local playerText = colorize(L['Progress of'], "GREY") .. ' ' .. colorize(playerName, HonorSpy.db.factionrealm.currentStandings[playerName].class)
@@ -152,13 +152,8 @@ function GUI:UpdateTableView()
 			if tonumber(thisWeekHonor) == 1 then thisWeekHonor = 0 end
             button.Honor:SetText(colorize(thisWeekHonor, class));
 			if HonorSpy.db.factionrealm.estHonorCol.show then
-                button.EstWeekHonor:SetWidth(100);
-				if (tonumber(estHonor) ~= nil) then
-					local estTodayHonor = estHonor - thisWeekHonor
-					-- This may happen when blizz value is up to date but estimation is not
-					if (estTodayHonor < 0) then
-                        estHonor = thisWeekHonor  
-                    end
+				button.EstWeekHonor:SetWidth(100);
+				if (tonumber(estHonor) ~= nil and tonumber(estHonor) ~= 0) then
 					button.EstWeekHonor:SetText(colorize(estHonor, class));
 				else
 					button.EstWeekHonor:SetText();
@@ -169,11 +164,11 @@ function GUI:UpdateTableView()
 			end
             if HonorSpy.db.factionrealm.estTodayHonorCol.show then
 				button.EstHonor:SetWidth(100);
-				if (tonumber(estHonor) ~= nil) then
+				if (tonumber(estHonor) ~= nil and tonumber(estHonor) ~= 0) then
 					local estTodayHonor = estHonor - thisWeekHonor
 					-- This may happen when blizz value is up to date but estimation is not
-					if (estTodayHonor < 0) then 
-                        estTodayHonor = 0 
+					if (estTodayHonor < 0) then
+                        estTodayHonor = 0
                     end
 					button.EstHonor:SetText(colorize(estTodayHonor, class));
 				else
@@ -265,7 +260,7 @@ function GUI:PrepareGUI()
 	knownHonorbtn:SetWidth(80)
 	knownHonorbtn:SetText(colorize(L["Honor"], "ORANGE"))
 	tableHeader:AddChild(knownHonorbtn)
-    
+
 	if HonorSpy.db.factionrealm.estTodayHonorCol.show then
         knownHonorbtn:SetText(colorize(L["KnownHonor"], "ORANGE"))
 
@@ -281,7 +276,7 @@ function GUI:PrepareGUI()
 
     if HonorSpy.db.factionrealm.estHonorCol.show then
         knownHonorbtn:SetText(colorize(L["KnownHonor"], "ORANGE"))
-        
+
         btn = AceGUI:Create("InteractiveLabel")
         btn:SetCallback("OnClick", function()
             GUI:Show(false, L["ThisWeekHonor"])
@@ -374,7 +369,7 @@ function HonorSpyGUI:UpdateHonorFrameText(setRankProgress)
 	local _, rankNumber = GetPVPRankInfo(UnitPVPRank("player"))
 	local rankProgress = GetPVPRankProgress(); -- This is a player only call
 	HonorFrameCurrentPVPRank:SetText(format("(%s %d) %d%%", RANK, rankNumber, rankProgress*100))
-	
+
 	-- today's honor
 	HonorFrameCurrentHKValue:SetText(format("%d "..colorize("(Honor: %d)", "NORMAL"), GetPVPSessionStats(), HonorSpy.db.char.estimated_honor - HonorSpy.db.char.original_honor))
 	-- this week honor
@@ -386,7 +381,7 @@ function colorize(str, colorOrClass)
 	if (not colorOrClass) then -- some guys have nil class for an unknown reason
 		colorOrClass = "nil"
 	end
-	
+
 	if (not colors[colorOrClass] and RAID_CLASS_COLORS and RAID_CLASS_COLORS[colorOrClass]) then
 		colors[colorOrClass] = format("%02x%02x%02x", RAID_CLASS_COLORS[colorOrClass].r * 255, RAID_CLASS_COLORS[colorOrClass].g * 255, RAID_CLASS_COLORS[colorOrClass].b * 255)
 	end
