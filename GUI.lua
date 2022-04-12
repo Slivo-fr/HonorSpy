@@ -110,7 +110,7 @@ function GUI:UpdateTableView()
 			brk_delim_inserted = true
 			button.Name:SetText(colorize(format(L["Bracket"] .. " %d", brackets[itemIndex]), "GREY"))
 			button.Honor:SetText();
-            button.EstHonor:SetText();
+            button.EstTodayHonor:SetText();
             button.EstWeekHonor:SetText();
 			if HonorSpy.db.factionrealm.estHonorCol.show then
                 button.EstWeekHonor:SetWidth(80);
@@ -118,9 +118,9 @@ function GUI:UpdateTableView()
                 button.EstWeekHonor:SetWidth(0);
 			end
             if HonorSpy.db.factionrealm.estTodayHonorCol.show then
-				button.EstHonor:SetWidth(80);
+				button.EstTodayHonor:SetWidth(80);
 			else
-				button.EstHonor:SetWidth(0);
+				button.EstTodayHonor:SetWidth(0);
 			end
 			button.LstWkHonor:SetText();
 			button.Standing:SetText();
@@ -168,20 +168,20 @@ function GUI:UpdateTableView()
                 button.EstWeekHonor:SetWidth(0);
 			end
             if HonorSpy.db.factionrealm.estTodayHonorCol.show then
-				button.EstHonor:SetWidth(100);
+				button.EstTodayHonor:SetWidth(100);
 				if (tonumber(estHonor) ~= nil) then
 					local estTodayHonor = estHonor - thisWeekHonor
 					-- This may happen when blizz value is up to date but estimation is not
 					if (estTodayHonor < 0) then 
                         estTodayHonor = 0 
                     end
-					button.EstHonor:SetText(colorize(estTodayHonor, class));
+					button.EstTodayHonor:SetText(colorize(estTodayHonor, class));
 				else
-					button.EstHonor:SetText();
+					button.EstTodayHonor:SetText();
 				end
 			else
-				button.EstHonor:SetText();
-				button.EstHonor:SetWidth(0);
+				button.EstTodayHonor:SetText();
+				button.EstTodayHonor:SetWidth(0);
 			end
 			button.LstWkHonor:SetText(colorize(lastWeekHonor, class));
 			button.Standing:SetText(colorize(standing, class));
