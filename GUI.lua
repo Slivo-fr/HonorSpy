@@ -8,8 +8,6 @@ LibStub("AceHook-3.0"):Embed(GUI)
 
 local mainFrame, poolSize, playerStandings, reportBtn, scroll = nil, nil, nil, nil
 local rows, brackets = {}, {}
-local playersPerRow = 50
-local needsRelayout = true
 
 local colors = {
 	["ORANGE"] = "ff7f00",

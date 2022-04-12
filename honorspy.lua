@@ -8,19 +8,18 @@ local commPrefix = addonName .. "7";
 
 local paused = false; -- pause all inspections when user opens inspect frame
 local playerName = HonorSpyUtils:getFullUnitName("player");
-local callback = nil
-local nameToTest = nil
+local callback
+local nameToTest
 local startRemovingFakes = false
 local som_realm = false
 local ERR_FRIEND_ONLINE_PATTERN = ERR_FRIEND_ONLINE_SS:gsub("%%s", "(.+)"):gsub("([%[%]])", "%%%1")
 local last_test = time() - 300
 local checkingPlayers = false;
 local addingPlayer = false;
-local muteTimer = C_Timer.NewTimer(1,function () end)
 local lastPlayer
 
 local inspectedPlayers = {}; -- stores last_checked time of all players met
-local inspectedPlayerName = nil; -- name of currently inspected player
+local inspectedPlayerName; -- name of currently inspected player
 
 local function isFakePlayer(playerName)
 	if (HonorSpy.db.factionrealm.fakePlayers[playerName]) then
