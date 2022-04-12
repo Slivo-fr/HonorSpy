@@ -279,7 +279,7 @@ function GUI:PrepareGUI()
 		end)
 		btn.highlight:SetColorTexture(0.3, 0.3, 0.3, 0.5)
 		btn:SetWidth(100)
-		btn:SetText(colorize(L["EstHonor"], "ORANGE"))
+		btn:SetText(colorize(L["EstTodayHonor"], "ORANGE"))
 		tableHeader:AddChild(btn)
 	end
 
@@ -292,7 +292,7 @@ function GUI:PrepareGUI()
         end)
         btn.highlight:SetColorTexture(0.3, 0.3, 0.3, 0.5)
         btn:SetWidth(100)
-        btn:SetText(colorize(L["ThisWeekHonor"], "ORANGE"))
+        btn:SetText(colorize(L["EstWeekHonor"], "ORANGE"))
         tableHeader:AddChild(btn)
 	end
 
