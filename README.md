@@ -1,5 +1,13 @@
 ## HonorSpy addon for WoW: Classic
 
+### Important notice
+
+Since blizzard reworked the ranking system in classic ERA, your progress is unrelated to other players honor or rank.
+This makes honorspy purposeless and outdated, which results in the end of dev and maintenance for this addon.
+You should probably uninstall it as it will cause error and problems sooner or later.
+
+### Description
+
 Addon helps players estimate their PvP next week rank and overall progress.
 
 It uses the exact formulaes as game server does, the only difference is that it operates on the database collected by players themselves. The final result is pretty close to what you get in reality, as the database is collected by all addon users and is synced instantly across other players.
